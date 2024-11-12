@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidroponik</title>
+
+    <!-- Link ke style.css -->
+    <link rel="stylesheet" href="style.css"> 
+    
+    <!-- Library Chart.js untuk grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Judul Halaman -->
+    <h1>Data</h1>
+    
+    <!-- Kontainer untuk menampilkan data mentah -->
+    <div class="data-container" id="data-container">
+        Memuat data...
+    </div>
+
+    <!-- Kontainer grafik -->
+    <div id="chart-container">
+        <canvas id="sensorChart"></canvas>
+    </div>
+
+    <script>
+        // Fungsi untuk mengambil data dari server
+        async function fetchData() {
+            const response = await fetch('http://127.0.0.1:5000/iot_api/data');
+            const data = await response.json();
+
+            // Tampilkan data mentah di dalam kontainer
+            document.getElementById('data-container').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+            // Variabel untuk data grafik
+            const temp = [];
+            const humid = [];
+            const lux = [];
+            const timestamp = [];
+
+            // Parsing data untuk ditampilkan di grafik
+            Object.values(data.nilai_suhu_max_humid_max).forEach(item => {
+                temp.push(item.suhu);
+                humid.push(item.humid);
+                lux.push(item.kecerahan);
+                timestamp.push(item.timestamp);
+            });
+
+            // Buat grafik menggunakan Chart.js
+            const ctx = document.getElementById('sensorChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timestamp,
+                    datasets: [
+                        {
+                            label: 'Suhu',
+                            data: temp,
+                            borderColor: '#fb8500',
+                            fill: false,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Kelembaban',
+                            data: humid,
+                            borderColor: '#ffb703',
+                            fill: false,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Kecerahan',
+                            data: lux,
+                            borderColor: '#a8dadc',
+                            fill: false,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: timestamp,
+                            title: {
+                                display: true,
+                                text: 'Timestamp'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Panggil fungsi fetchData untuk mulai mengambil data
+        fetchData();
+    </script>
+</body>
+</html>
